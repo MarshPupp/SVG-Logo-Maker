@@ -1,5 +1,6 @@
 const fs = require('fs');
 const inquirer = require('inquirer');
+const path = require('path');
 const { triangle, circle, square, svg} = require('./lib/shapes');
 
 
@@ -38,11 +39,12 @@ class logoMaker {
     this.textColor = {};
     this.shape = {};
     this.shapeColor = {};
+    this.examplesDir =path.join(__dirname,'examples');
     }
 
     setShapeType() {
         let shape; 
-        switch (this.shape) {
+        switch (this.userInput.shape) {
             case 'triangle':
                 shape = new triangle();
                 break;
@@ -57,25 +59,24 @@ class logoMaker {
                 return null;
         }
 
-        shape.setTextColor(this.textColor);
-        shape.setColor(this.shapeColor);   
+        shape.setTextColor(this.userInput.textColor);
+        shape.setColor(this.userInput.shapeColor);   
         
-        console.log(shape, shapeColor);
+        console.log(shape, this.userInput.shapeColor);
         
         return shape; 
     }
 
     generateSVGFile(shape) {
-        const textSVG = '<text x="150" y="125" font-size="60" text-anchor="middle" fill="${color}">${text}</text>';
+        const textSVG = `<text x="150" y="125" font-size="55" text-anchor="middle" fill="${this.userInput.textColor}">${this.userInput.text}</text>`;
         const shapeSVG = shape.generate();
-        const SVGstring = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="300" height="200">${shapeSVG} ${textSVG}</svg>`;
+        const SVGstring = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="300" height="200">${shapeSVG.replace(/\${this.color}/g, this.userInput.shapeColor).replace(/\${this.textColor}/g, this.userInput.textColor)} ${textSVG}</svg>`;
 
-        const fileName = 'logo.svg';
-        const filePath = path.join(this.examplesDir, error.message);
+        const filePath = path.join(this.examplesDir, this.userInput.shape + '.svg');
 
         try {
             fs.writeFileSync(filePath, SVGstring);
-            console.log(`Created ${fileName} in the examples directory`);
+            console.log(`Created ${this.userInput.shape}.svg in the examples directory`);
         } catch (error) {
             console.error('Error writing SVG file:', error.message);
         }
@@ -83,7 +84,7 @@ class logoMaker {
 
     async run() {
         this.userInput = await this.getUserInput();
-        const shape = this.createShape();
+        const shape = this.setShapeType();
 
         if (shape) {
             this.generateSVGFile(shape);
@@ -94,5 +95,5 @@ class logoMaker {
 };
 
 
-const logoMaker = new logoMaker();
-logoMaker.run()
+const logoMakerNew = new logoMaker();
+logoMakerNew.run()
